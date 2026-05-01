@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bookly Support</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f4f6f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .chat-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+      width: 420px;
+      max-width: 95vw;
+      display: flex;
+      flex-direction: column;
+      height: 620px;
+    }
+
+    .chat-header {
+      background: #1a1a2e;
+      color: white;
+      padding: 16px 20px;
+      border-radius: 12px 12px 0 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chat-header .avatar {
+      background: #e94560;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .chat-header .info .name { font-weight: 600; font-size: 15px; }
+    .chat-header .info .status { font-size: 12px; color: #a0aec0; }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message {
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .message.agent {
+      background: #f0f4ff;
+      color: #1a1a2e;
+      align-self: flex-start;
+      border-bottom-left-radius: 2px;
+    }
+
+    .message.user {
+      background: #1a1a2e;
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 2px;
+    }
+
+    .message.typing {
+      background: #f0f4ff;
+      color: #999;
+      align-self: flex-start;
+      font-style: italic;
+    }
+
+    .chat-input {
+      display: flex;
+      padding: 14px 16px;
+      border-top: 1px solid #e2e8f0;
+      gap: 10px;
+    }
+
+    .chat-input input {
+      flex: 1;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .chat-input input:focus { border-color: #1a1a2e; }
+
+    .chat-input button {
+      background: #e94560;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .chat-input button:hover { background: #c73652; }
+    .chat-input button:disabled { background: #ccc; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="avatar">📚</div>
+      <div class="info">
+        <div class="name">Bookly Support</div>
+        <div class="status">AI Assistant • Always here to help</div>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="messages">
+      <div class="message agent">
+        Hi! I'm Bookly's support assistant. I can help you with order status, returns, refunds, and general questions. How can I help you today?
+      </div>
+    </div>
+
+    <div class="chat-input">
+      <input type="text" id="userInput" placeholder="Type your message..." />
+      <button id="sendBtn" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const messagesEl = document.getElementById("messages");
+    const inputEl = document.getElementById("userInput");
+    const sendBtn = document.getElementById("sendBtn");
+
+    let history = [];
+
+    inputEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") sendMessage();
+    });
+
+    function appendMessage(text, role) {
+      const div = document.createElement("div");
+      div.className = `message ${role}`;
+      div.textContent = text;
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      return div;
+    }
+
+    async function sendMessage() {
+      const text = inputEl.value.trim();
+      if (!text) return;
+
+      inputEl.value = "";
+      sendBtn.disabled = true;
+
+      appendMessage(text, "user");
+      history.push({ role: "user", content: text });
+
+      const typing = appendMessage("Bookly is typing...", "typing");
+
+      try {
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text, history: history })
+        });
+
+        const data = await res.json();
+        typing.remove();
+
+        appendMessage(data.response, "agent");
+        history.push({ role: "assistant", content: data.response });
+
+      } catch (err) {
+        typing.remove();
+        appendMessage("Sorry, something went wrong. Please try again.", "agent");
+      }
+
+      sendBtn.disabled = false;
+      inputEl.focus();
+    }
+  </script>
+</body>
+</html>
