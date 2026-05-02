@@ -7,7 +7,7 @@ Bookly accepts returns within 30 days of delivery. Items must be in their origin
 Refunds are processed within 5-7 business days after Bookly receives the returned item. The refund will be issued to the original payment method. Shipping costs are non-refundable unless the return is due to a Bookly error (e.g. wrong item sent, damaged in transit).
 
 ## Bookly Credits (Alternative to Refund)
-As an alternative to a standard refund, Bookly offers store credits worth 110% of the original order value. For example, a $40 order would receive $44 in Bookly Credits. Credits never expire and can be applied to any future Bookly purchase. This is the recommended option for customers who plan to shop with Bookly again, as they receive more value than a standard refund.
+As an alternative to a standard refund, Bookly offers store credits worth 100% of the original order value. For example, a $40 order would receive $44 in Bookly Credits. Credits never expire and can be applied to any future Bookly purchase. This is the recommended option for customers who plan to shop with Bookly again, as they receive more value than a standard refund.
 
 ## Exchange Policy
 Bookly does not currently support direct item exchanges. If a customer wishes to exchange an item, they should initiate a return for the original order and place a new order for the desired item. The standard return policy applies.

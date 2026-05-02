@@ -13,15 +13,32 @@ KB_PATH = os.path.join(os.path.dirname(__file__), "knowledge_base.md")
 with open(KB_PATH, "r") as f:
     raw_kb = f.read()
 
-# Split into sections by ## headings
 KNOWLEDGE_BASE = []
 for section in raw_kb.split("\n## "):
     if section.startswith("# "):
-        continue  # skip the document title
+        continue
     lines = section.strip().split("\n", 1)
     if len(lines) == 2:
         title, content = lines
         KNOWLEDGE_BASE.append({
+            "title": title.strip("# ").strip(),
+            "content": content.strip()
+        })
+
+# --- Load Procedures ---
+
+PROC_PATH = os.path.join(os.path.dirname(__file__), "procedures.md")
+with open(PROC_PATH, "r") as f:
+    raw_proc = f.read()
+
+PROCEDURES = []
+for section in raw_proc.split("\n## "):
+    if section.startswith("# "):
+        continue
+    lines = section.strip().split("\n", 1)
+    if len(lines) == 2:
+        title, content = lines
+        PROCEDURES.append({
             "title": title.strip("# ").strip(),
             "content": content.strip()
         })
@@ -37,6 +54,7 @@ MOCK_ORDERS = {
     "5551234567": [
         {"order_id": "BK-2001", "title": "Atomic Habits", "date": "2026-04-15", "total": "$27.99"},
         {"order_id": "BK-2002", "title": "Deep Work", "date": "2026-04-28", "total": "$24.99"},
+        {"order_id": "BK-1003", "title": "2 Scientific Books (Introduction to Algorithms + The Art of Computer Programming)", "date": "2026-04-25", "total": "$389.95"},
     ],
 }
 
@@ -103,6 +121,25 @@ async def list_tools() -> list[types.Tool]:
                     }
                 },
                 "required": ["order_id", "reason"]
+            }
+        ),
+        types.Tool(
+            name="search_procedures",
+            description=(
+                "Search Bookly's internal step-by-step procedure library. "
+                "Use this to look up how to handle a specific situation — e.g. how to process a return, "
+                "how to identify a customer, how to escalate to a human agent. "
+                "Call this before taking any multi-step action to ensure you follow the correct process."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The situation or action to look up (e.g. 'return request', 'wrong item received', 'escalate to human')."
+                    }
+                },
+                "required": ["query"]
             }
         ),
         types.Tool(
@@ -185,6 +222,30 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
                 "Refunds are processed within 5-7 business days after we receive the item."
             )
         }
+        return [types.TextContent(type="text", text=json.dumps(result))]
+
+    elif name == "search_procedures":
+        query = arguments.get("query", "").lower()
+        query_words = set(query.split())
+
+        matches = []
+        for entry in PROCEDURES:
+            title_hits = sum(1 for word in query_words if word in entry["title"].lower()) * 3
+            content_hits = sum(1 for word in query_words if word in entry["content"].lower())
+            score = title_hits + content_hits
+            if score > 0:
+                matches.append((score, entry))
+
+        matches.sort(key=lambda x: x[0], reverse=True)
+        top_matches = [
+            f"**{entry['title']}**\n{entry['content']}"
+            for _, entry in matches[:2]
+        ]
+
+        if top_matches:
+            result = {"found": True, "results": top_matches}
+        else:
+            result = {"found": False, "message": "No procedure found for that query."}
         return [types.TextContent(type="text", text=json.dumps(result))]
 
     elif name == "search_knowledge_base":
