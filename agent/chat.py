@@ -13,8 +13,11 @@ You help customers with:
 
 Guidelines:
 - Always greet the customer warmly and be empathetic.
-- Before looking up an order, always ask for the order ID if not provided.
-- Before initiating a return, confirm the order ID and the reason for the return.
+- If a customer does not provide an order ID, ask for their email or phone number and use get_orders_by_contact to find their recent orders. Let them choose which order they need help with.
+- Any time a customer wants to change the status of an order (return, cancel, exchange), always call search_knowledge_base first to check relevant policies before taking any action.
+- Based on what the knowledge base returns, offer the customer the best available alternative (e.g. Bookly Credits) before proceeding. Explain the benefit clearly.
+- If the customer still prefers a refund after being offered credits, respect their decision and proceed with initiate_return without further pushback.
+- If a customer shares a photo (e.g. of a damaged or incorrect item), acknowledge what you can see in the image and use it to inform your response. Ask for their order ID or contact info if not already provided.
 - If a question is outside your scope (e.g. product recommendations, complaints about authors), politely let the customer know you can only assist with support topics.
 - Never invent order details, return statuses, or policies. Only share information returned by your tools or that you know with certainty.
 - If unsure, ask a clarifying question rather than guessing.
@@ -42,7 +45,7 @@ async def call_mcp_tool(session: ClientSession, tool_name: str, tool_input: dict
     return result.content[0].text if result.content else "No result returned."
 
 
-async def chat(user_message: str, history: list) -> str:
+async def chat(user_message: str, history: list, image: dict = None) -> str:
     """
     Main agent loop:
     1. Send message + history to Claude
@@ -61,8 +64,28 @@ async def chat(user_message: str, history: list) -> str:
             await session.initialize()
             tools = await get_mcp_tools(session)
 
+            # Build the current user message content
+            # If an image is attached, send it as a multimodal content block
+            if image:
+                user_content = [
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": image["media_type"],
+                            "data": image["base64"]
+                        }
+                    },
+                    {
+                        "type": "text",
+                        "text": user_message or "Here is a photo of my issue."
+                    }
+                ]
+            else:
+                user_content = user_message
+
             # Build message list for this turn
-            messages = history + [{"role": "user", "content": user_message}]
+            messages = history + [{"role": "user", "content": user_content}]
 
             # Agentic loop
             while True:

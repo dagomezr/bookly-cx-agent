@@ -32,7 +32,7 @@ MOCK_ORDERS = {
     "test@example.com": [
         {"order_id": "BK-1001", "title": "The Pragmatic Programmer", "date": "2026-04-10", "total": "$45.99"},
         {"order_id": "BK-1002", "title": "Clean Code", "date": "2026-04-18", "total": "$32.50"},
-        {"order_id": "BK-1003", "title": "Designing Data-Intensive Applications", "date": "2026-04-25", "total": "$58.00"},
+        {"order_id": "BK-1003", "title": "2 Scientific Books (Introduction to Algorithms + The Art of Computer Programming)", "date": "2026-04-25", "total": "$389.95"},
     ],
     "5551234567": [
         {"order_id": "BK-2001", "title": "Atomic Habits", "date": "2026-04-15", "total": "$27.99"},
@@ -43,7 +43,7 @@ MOCK_ORDERS = {
 MOCK_ORDER_STATUS = {
     "BK-1001": {"status": "Delivered", "delivered_on": "2026-04-13", "carrier": "UPS"},
     "BK-1002": {"status": "In Transit", "estimated_delivery": "2026-05-02", "carrier": "FedEx"},
-    "BK-1003": {"status": "Processing", "note": "Order is being prepared for shipment."},
+    "BK-1003": {"status": "Delivered", "delivered_on": "2026-04-28", "carrier": "UPS", "note": "2 items delivered."},
     "BK-2001": {"status": "Delivered", "delivered_on": "2026-04-19", "carrier": "USPS"},
     "BK-2002": {"status": "Processing", "note": "Order is being prepared for shipment."},
 }

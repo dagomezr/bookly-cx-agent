@@ -18,5 +18,6 @@ def root():
 async def chat_endpoint(body: dict):
     user_message = body.get("message")
     conversation_history = body.get("history", [])
-    response = await chat(user_message, conversation_history)
+    image = body.get("image")  # optional: { base64, media_type }
+    response = await chat(user_message, conversation_history, image)
     return {"response": response}
