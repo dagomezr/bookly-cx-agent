@@ -1,0 +1,12 @@
+[
+  {
+    "ticket_id": "RT-101",
+    "order_id": "BK-1003",
+    "reason": "Wrong books received \u2014 customer ordered science/computing textbooks but received unrelated books.",
+    "summary": "Customer received wrong books for order BK-1003 ($389.95) and is requesting a full refund. Urgency: needs the correct books for a class next Monday and cannot wait for a replacement. Customer context: Gold loyalty tier, 5-year customer since March 2021, $1,240 annual spend.",
+    "image_filename": "pending.jpg",
+    "status": "pending",
+    "created_at": "2026-05-02T23:11:16.186960+00:00",
+    "procedure": null
+  }
+]

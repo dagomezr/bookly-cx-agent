@@ -341,13 +341,13 @@
       appendMessage(text, "user", imageToSend?.dataUrl);
 
       // Build history entry
+      // Images are sent once (in the request body) but NOT stored in history as base64 —
+      // re-sending large image blobs on every turn causes 413 errors.
+      // We store a text placeholder instead so history stays lightweight.
       if (imageToSend) {
         history.push({
           role: "user",
-          content: [
-            { type: "image", source: { type: "base64", media_type: imageToSend.mediaType, data: imageToSend.base64 } },
-            { type: "text", text: text || "Here is a photo." }
-          ]
+          content: text ? `[attached photo] ${text}` : "[attached photo]"
         });
       } else {
         history.push({ role: "user", content: text });

@@ -1,11 +1,26 @@
 import asyncio
 import json
 import os
+from datetime import datetime, timezone
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp import types
 
 app = Server("bookly-mcp-server")
+
+TASKS_PATH = os.path.join(os.path.dirname(__file__), "..", "tasks.json")
+
+
+def load_tasks() -> list:
+    if not os.path.exists(TASKS_PATH):
+        return []
+    with open(TASKS_PATH, "r") as f:
+        return json.load(f)
+
+
+def save_tasks(tasks: list):
+    with open(TASKS_PATH, "w") as f:
+        json.dump(tasks, f, indent=2)
 
 # --- Load Knowledge Base ---
 
@@ -68,6 +83,23 @@ MOCK_ORDER_STATUS = {
 
 RETURN_COUNTER = {"count": 100}
 
+CUSTOMER_PROFILES = {
+    "test@example.com": {
+        "customer_since": "March 2021",
+        "years_as_customer": 5,
+        "annual_spend": "$1,240",
+        "loyalty_club": True,
+        "loyalty_tier": "Gold"
+    },
+    "5551234567": {
+        "customer_since": "March 2021",
+        "years_as_customer": 5,
+        "annual_spend": "$1,240",
+        "loyalty_club": True,
+        "loyalty_tier": "Gold"
+    },
+}
+
 
 # --- Tool Definitions ---
 
@@ -106,8 +138,47 @@ async def list_tools() -> list[types.Tool]:
             }
         ),
         types.Tool(
+            name="save_customer_photo",
+            description=(
+                "Internal action — saves the photo the customer shared for this support case. "
+                "Call this silently as soon as the customer provides a photo. "
+                "Do NOT announce this to the customer or mention it in any way. "
+                "Returns the local file path to pass to initiate_return."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        ),
+        types.Tool(
+            name="get_customer_profile",
+            description=(
+                "Look up a customer's loyalty and purchase history: how long they've been a customer, "
+                "annual spend, and whether they are a loyalty club member. "
+                "Call this before initiating a return that requires human review, "
+                "so the operator has full context."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "contact": {
+                        "type": "string",
+                        "description": "The customer's email address or phone number."
+                    }
+                },
+                "required": ["contact"]
+            }
+        ),
+        types.Tool(
             name="initiate_return",
-            description="Initiate a return or refund request for a specific order.",
+            description=(
+                "Initiate a return or refund request for a specific order. "
+                "Set human_review=true for orders over $300 — this flags the case for operator review. "
+                "Include a conversation_summary when human_review is true: 1–3 sentences covering the issue, "
+                "urgency signals, and any customer context. "
+                "Pass image_path if save_customer_photo was called earlier in this conversation."
+            ),
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -118,6 +189,18 @@ async def list_tools() -> list[types.Tool]:
                     "reason": {
                         "type": "string",
                         "description": "The reason the customer wants to return the order."
+                    },
+                    "human_review": {
+                        "type": "boolean",
+                        "description": "Set to true for orders over $300. Creates a task in the operator inbox for manual review."
+                    },
+                    "conversation_summary": {
+                        "type": "string",
+                        "description": "A 1–3 sentence summary of the conversation: issue, urgency, and customer context. Required when human_review is true."
+                    },
+                    "image_path": {
+                        "type": "string",
+                        "description": "The file path returned by save_customer_photo, if a photo was saved in this conversation."
                     }
                 },
                 "required": ["order_id", "reason"]
@@ -187,6 +270,17 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
             }
         return [types.TextContent(type="text", text=json.dumps(result))]
 
+    elif name == "get_customer_profile":
+        contact = arguments.get("contact", "").strip().lower()
+        normalized = ''.join(filter(str.isdigit, contact)) if '@' not in contact else contact
+        profile = CUSTOMER_PROFILES.get(contact) or CUSTOMER_PROFILES.get(normalized)
+
+        if not profile:
+            result = {"found": False, "message": "No profile found for this contact."}
+        else:
+            result = {"found": True, **profile}
+        return [types.TextContent(type="text", text=json.dumps(result))]
+
     elif name == "get_order_status":
         order_id = arguments.get("order_id", "").strip().upper()
         status = MOCK_ORDER_STATUS.get(order_id)
@@ -204,22 +298,63 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
             }
         return [types.TextContent(type="text", text=json.dumps(result))]
 
+    elif name == "save_customer_photo":
+        images_dir = os.path.join(os.path.dirname(__file__), "..", "images")
+        for ext in ("jpg", "jpeg", "png", "webp"):
+            candidate = os.path.join(images_dir, f"pending.{ext}")
+            if os.path.exists(candidate):
+                result = {"saved": True, "path": f"pending.{ext}"}
+                return [types.TextContent(type="text", text=json.dumps(result))]
+        result = {"saved": False, "message": "No photo found. Ask the customer to share one first."}
+        return [types.TextContent(type="text", text=json.dumps(result))]
+
     elif name == "initiate_return":
         order_id = arguments.get("order_id", "").strip().upper()
         reason = arguments.get("reason", "")
+        human_review = arguments.get("human_review", False)
+        conversation_summary = arguments.get("conversation_summary", "")
+        image_path = arguments.get("image_path", None)
+
         RETURN_COUNTER["count"] += 1
         ticket_id = f"RT-{RETURN_COUNTER['count']}"
+
+        if human_review:
+            # Find the saved photo directly from disk — don't rely on the agent passing the path correctly
+            images_dir = os.path.join(os.path.dirname(__file__), "..", "images")
+            image_filename = None
+            for ext in ("jpg", "jpeg", "png", "webp"):
+                if os.path.exists(os.path.join(images_dir, f"pending.{ext}")):
+                    image_filename = f"pending.{ext}"
+                    break
+
+            tasks = load_tasks()
+            tasks.append({
+                "ticket_id": ticket_id,
+                "order_id": order_id,
+                "reason": reason,
+                "summary": conversation_summary,
+                "image_filename": image_filename,
+                "status": "pending",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "procedure": None
+            })
+            save_tasks(tasks)
 
         result = {
             "success": True,
             "return_ticket_id": ticket_id,
             "order_id": order_id,
             "reason": reason,
+            "human_review": human_review,
             "message": (
                 f"Your return request for order {order_id} has been submitted. "
                 f"Your return ticket ID is {ticket_id}. "
-                "You will receive a prepaid shipping label via email within 24 hours. "
-                "Refunds are processed within 5-7 business days after we receive the item."
+                + (
+                    "Due to the order amount, a specialist will review this case shortly and reach out to you with next steps."
+                    if human_review else
+                    "You will receive a prepaid shipping label via email within 24 hours. "
+                    "Refunds are processed within 5-7 business days after we receive the item."
+                )
             )
         }
         return [types.TextContent(type="text", text=json.dumps(result))]

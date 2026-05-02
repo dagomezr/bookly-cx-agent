@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bookly Operator Inbox</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f4f6f9;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      background: #1a1a2e;
+      color: white;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .header .logo { font-size: 20px; }
+
+    .header .title {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .header .subtitle {
+      font-size: 12px;
+      color: #a0aec0;
+    }
+
+    .header a {
+      margin-left: auto;
+      color: #a0aec0;
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    .header a:hover { color: white; }
+
+    /* Main layout */
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Left panel — task list */
+    .sidebar {
+      width: 300px;
+      flex-shrink: 0;
+      background: white;
+      border-right: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 13px;
+      font-weight: 600;
+      color: #555;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .badge {
+      background: #e94560;
+      color: white;
+      border-radius: 10px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .task-list {
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .task-item {
+      padding: 14px 20px;
+      border-bottom: 1px solid #f0f4ff;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .task-item:hover { background: #f8faff; }
+    .task-item.active { background: #eef2ff; border-left: 3px solid #1a1a2e; }
+
+    .task-item .order-id {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1a1a2e;
+    }
+
+    .task-item .task-reason {
+      font-size: 12px;
+      color: #666;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .task-item .task-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+    }
+
+    .task-item .task-time {
+      font-size: 11px;
+      color: #aaa;
+    }
+
+    .status-pill {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      text-transform: uppercase;
+    }
+
+    .status-pill.pending   { background: #fff3cd; color: #856404; }
+    .status-pill.approved  { background: #d1fae5; color: #065f46; }
+    .status-pill.rejected  { background: #fee2e2; color: #991b1b; }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    /* Right panel — detail */
+    .detail {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .placeholder {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #bbb;
+      font-size: 15px;
+    }
+
+    .detail-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      padding: 24px;
+    }
+
+    .detail-card h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    .detail-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 4px;
+    }
+
+    .detail-subtitle {
+      font-size: 13px;
+      color: #666;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .detail-field label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #999;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .detail-field span {
+      font-size: 14px;
+      color: #1a1a2e;
+    }
+
+    .summary-text {
+      font-size: 14px;
+      color: #333;
+      line-height: 1.6;
+      background: #f8faff;
+      border-left: 3px solid #1a1a2e;
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .photo-img {
+      max-width: 360px;
+      max-height: 280px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      object-fit: contain;
+    }
+
+    .no-photo {
+      color: #aaa;
+      font-size: 13px;
+      font-style: italic;
+    }
+
+    /* Procedure field */
+    .procedure-textarea {
+      width: 100%;
+      min-height: 120px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      line-height: 1.5;
+      resize: vertical;
+      outline: none;
+      color: #1a1a2e;
+      transition: border-color 0.2s;
+    }
+
+    .procedure-textarea:focus { border-color: #1a1a2e; }
+
+    .procedure-hint {
+      font-size: 12px;
+      color: #999;
+      margin-top: 6px;
+    }
+
+    /* Action buttons */
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .btn {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+    }
+
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-approve {
+      background: #10b981;
+      color: white;
+    }
+
+    .btn-approve:hover:not(:disabled) { background: #059669; }
+
+    .btn-reject {
+      background: white;
+      color: #e94560;
+      border: 1px solid #e94560;
+    }
+
+    .btn-reject:hover:not(:disabled) { background: #fff0f3; }
+
+    .decided-banner {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .decided-banner.approved { background: #d1fae5; color: #065f46; }
+    .decided-banner.rejected { background: #fee2e2; color: #991b1b; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo">📚</div>
+    <div>
+      <div class="title">Bookly Operator Inbox</div>
+      <div class="subtitle">Human-in-the-loop review</div>
+    </div>
+    <a href="/">← Back to Chat</a>
+  </div>
+
+  <div class="main">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        Pending Reviews
+        <span class="badge" id="pendingCount">0</span>
+      </div>
+      <div class="task-list" id="taskList">
+        <div class="empty-state">No tasks yet.<br/>They'll appear here when a<br/>high-value return is submitted.</div>
+      </div>
+    </div>
+
+    <!-- Detail panel -->
+    <div class="detail" id="detailPanel">
+      <div class="placeholder">Select a task to review</div>
+    </div>
+
+  </div>
+
+  <script>
+    let tasks = [];
+    let selectedTicket = null;
+
+    async function loadTasks() {
+      const res = await fetch("/api/tasks");
+      tasks = await res.json();
+      renderList();
+      if (selectedTicket) {
+        const still = tasks.find(t => t.ticket_id === selectedTicket);
+        if (still) renderDetail(still);
+      }
+    }
+
+    function timeAgo(iso) {
+      const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
+      if (diff < 60) return "just now";
+      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+      return `${Math.floor(diff / 86400)}d ago`;
+    }
+
+    function renderList() {
+      const el = document.getElementById("taskList");
+      const pending = tasks.filter(t => t.status === "pending").length;
+      document.getElementById("pendingCount").textContent = pending;
+
+      if (!tasks.length) {
+        el.innerHTML = `<div class="empty-state">No tasks yet.<br/>They'll appear here when a<br/>high-value return is submitted.</div>`;
+        return;
+      }
+
+      // Show pending first, then decided
+      const sorted = [...tasks].sort((a, b) => {
+        if (a.status === "pending" && b.status !== "pending") return -1;
+        if (a.status !== "pending" && b.status === "pending") return 1;
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+
+      el.innerHTML = sorted.map(t => `
+        <div class="task-item ${selectedTicket === t.ticket_id ? 'active' : ''}" onclick="selectTask('${t.ticket_id}')">
+          <div class="order-id">${t.ticket_id} · ${t.order_id}</div>
+          <div class="task-reason">${t.reason}</div>
+          <div class="task-meta">
+            <span class="task-time">${timeAgo(t.created_at)}</span>
+            <span class="status-pill ${t.status}">${t.status}</span>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function selectTask(ticketId) {
+      selectedTicket = ticketId;
+      const task = tasks.find(t => t.ticket_id === ticketId);
+      renderList();
+      renderDetail(task);
+    }
+
+    function renderDetail(task) {
+      const decided = task.status !== "pending";
+      const panel = document.getElementById("detailPanel");
+
+      panel.innerHTML = `
+        <div class="detail-card">
+          <div class="detail-title">${task.ticket_id}</div>
+          <div class="detail-subtitle">Return request for order ${task.order_id}</div>
+          <div class="detail-grid">
+            <div class="detail-field"><label>Reason</label><span>${task.reason}</span></div>
+            <div class="detail-field"><label>Submitted</label><span>${timeAgo(task.created_at)}</span></div>
+          </div>
+        </div>
+
+        ${task.summary ? `
+        <div class="detail-card">
+          <h3>Conversation Summary</h3>
+          <div class="summary-text">${task.summary}</div>
+        </div>` : ""}
+
+        <div class="detail-card">
+          <h3>Customer Photo</h3>
+          ${task.image_filename
+            ? `<img class="photo-img" src="/images/${task.image_filename}" alt="Customer photo" />`
+            : `<div class="no-photo">No photo attached</div>`
+          }
+        </div>
+
+        <div class="detail-card">
+          <h3>Curated Exceptional Procedure <span style="font-weight:400;color:#bbb;text-transform:none;font-size:12px;">(optional)</span></h3>
+          ${decided
+            ? (task.procedure
+                ? `<div class="summary-text">${task.procedure}</div>`
+                : `<div class="no-photo">No procedure was added — standard policy applies.</div>`)
+            : `
+          <textarea
+            class="procedure-textarea"
+            id="procedureInput"
+            placeholder="e.g. As a goodwill gesture for a loyal customer, offer a 10% discount code for their next order. No return is required — let the customer keep the item. Do not mention this as standard policy."
+          >${task.procedure || ""}</textarea>
+          <div class="procedure-hint">Leave blank to approve with standard policy. Add a Curated Exceptional Procedure to authorize a one-time exception for this case.</div>`
+          }
+        </div>
+
+        <div class="detail-card">
+          <h3>Decision</h3>
+          ${decided
+            ? `<div class="decided-banner ${task.status}">
+                ${task.status === "approved" ? "✅ Approved" : "❌ Rejected"}
+               </div>`
+            : `<div class="actions">
+                <button class="btn btn-approve" onclick="submitDecision('${task.ticket_id}', 'approved')">✅ Approve</button>
+                <button class="btn btn-reject"  onclick="submitDecision('${task.ticket_id}', 'rejected')">❌ Reject</button>
+               </div>`
+          }
+        </div>
+      `;
+    }
+
+    async function submitDecision(ticketId, decision) {
+      const procedureEl = document.getElementById("procedureInput");
+      const procedure = procedureEl ? procedureEl.value.trim() : null;
+
+      const res = await fetch(`/api/tasks/${ticketId}/decision`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ decision, procedure: procedure || null })
+      });
+
+      if (res.ok) {
+        await loadTasks();
+      } else {
+        alert("Something went wrong. Please try again.");
+      }
+    }
+
+    // Poll every 5 seconds for new tasks
+    loadTasks();
+    setInterval(loadTasks, 5000);
+  </script>
+
+</body>
+</html>
