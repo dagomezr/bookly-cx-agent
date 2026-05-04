@@ -138,6 +138,29 @@
     .status-pill.pending   { background: #fff3cd; color: #856404; }
     .status-pill.approved  { background: #d1fae5; color: #065f46; }
     .status-pill.rejected  { background: #fee2e2; color: #991b1b; }
+    .status-pill.security  { background: #fff; color: #92400e; border: 1px solid #f59e0b; }
+
+    .security-banner {
+      background: #fffbeb;
+      border: 1px solid #f59e0b;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #92400e;
+    }
+
+    .flagged-message {
+      font-family: monospace;
+      font-size: 13px;
+      background: #fef3c7;
+      border-left: 3px solid #f59e0b;
+      padding: 10px 14px;
+      border-radius: 0 8px 8px 0;
+      color: #1a1a2e;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin-top: 10px;
+    }
 
     .empty-state {
       text-align: center;
@@ -387,11 +410,11 @@
 
       el.innerHTML = sorted.map(t => `
         <div class="task-item ${selectedTicket === t.ticket_id ? 'active' : ''}" onclick="selectTask('${t.ticket_id}')">
-          <div class="order-id">${t.ticket_id} · ${t.order_id}</div>
+          <div class="order-id">${t.type === 'security' ? '🚨 ' : ''}${t.ticket_id} · ${t.order_id}</div>
           <div class="task-reason">${t.reason}</div>
           <div class="task-meta">
             <span class="task-time">${timeAgo(t.created_at)}</span>
-            <span class="status-pill ${t.status}">${t.status}</span>
+            <span class="status-pill ${t.type === 'security' ? 'security' : t.status}">${t.type === 'security' ? 'security' : t.status}</span>
           </div>
         </div>
       `).join("");
@@ -406,8 +429,44 @@
     }
 
     function renderDetail(task) {
-      const decided = task.status !== "pending";
       const panel = document.getElementById("detailPanel");
+
+      // Security flag: special read-only view, no approve/reject
+      if (task.type === "security") {
+        panel.innerHTML = `
+          <div class="detail-card">
+            <div class="detail-title">🚨 ${task.ticket_id}</div>
+            <div class="detail-subtitle">Security flag — prompt injection attempt</div>
+            <div class="detail-grid">
+              <div class="detail-field"><label>Detected</label><span>${timeAgo(task.created_at)}</span></div>
+              <div class="detail-field"><label>Status</label><span>Auto-blocked · customer notified</span></div>
+            </div>
+          </div>
+
+          <div class="detail-card">
+            <h3>What happened</h3>
+            <div class="security-banner">
+              The customer's message matched a prompt injection pattern and was blocked before reaching the AI.
+              The customer received a generic response and was told a human agent will follow up.
+            </div>
+          </div>
+
+          <div class="detail-card">
+            <h3>Flagged Content &amp; Conversation Context</h3>
+            <div class="flagged-message">${task.summary || "(no content captured)"}</div>
+          </div>
+
+          <div class="detail-card">
+            <h3>Operator Action</h3>
+            <div style="font-size:14px;color:#555;line-height:1.6;">
+              Review the flagged message above. If this was a genuine support request mis-classified, you can reach out to the customer directly. No action is required to close this flag.
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const decided = task.status !== "pending";
 
       panel.innerHTML = `
         <div class="detail-card">

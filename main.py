@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 from agent.chat import chat
 from agent.sms import sms_chat
+from agent.guardrails import is_prompt_injection, flag_security_event, INJECTION_RESPONSE
 
 load_dotenv()
 
@@ -187,6 +188,11 @@ async def chat_endpoint(body: dict):
     user_message = body.get("message", "") or ""
     conversation_history = body.get("history", [])
     image = body.get("image")
+
+    # --- Guardrail: prompt injection check ---
+    if user_message and is_prompt_injection(user_message):
+        flag_security_event(user_message, conversation_history)
+        return {"response": INJECTION_RESPONSE}
 
     if image:
         media_type = image.get("media_type", "image/jpeg")
