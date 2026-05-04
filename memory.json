@@ -1,0 +1,9 @@
+{
+  "5551234567": {
+    "contact": "5551234567",
+    "summary": "Customer received wrong books for order BK-1003 (expected Introduction to Algorithms and The Art of Computer Programming, received El Hombre en Busca de Sentido and Lazos de Amor). Return initiated (RT-101), flagged for human review due to order over $300. Photo of wrong items saved. Customer is a Gold loyalty member, 4-year customer with ~$2,100 annual spend.",
+    "preferred_channel": "sms",
+    "contact_detail": "5551234567",
+    "last_seen": "2026-05-04T18:20:14.583203+00:00"
+  }
+}

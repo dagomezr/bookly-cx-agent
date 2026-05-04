@@ -2,11 +2,11 @@
   {
     "ticket_id": "RT-101",
     "order_id": "BK-1003",
-    "reason": "Wrong books received \u2014 customer ordered science/computing textbooks but received unrelated books.",
-    "summary": "Customer received wrong books for order BK-1003 ($389.95) and is requesting a full refund. Urgency: needs the correct books for a class next Monday and cannot wait for a replacement. Customer context: Gold loyalty tier, 5-year customer since March 2021, $1,240 annual spend.",
+    "reason": "Wrong items received \u2014 customer ordered two computer science books (Introduction to Algorithms + The Art of Computer Programming) but received two unrelated Spanish-language books (El Hombre en Busca de Sentido, Lazos de Amor).",
+    "summary": "Customer received completely wrong books for order BK-1003 ($389.95) \u2014 got two Spanish-language titles instead of two computer science textbooks. No explicit urgency signals. Customer is a 5-year Gold loyalty member with $1,240 annual spend. Photo of incorrect items provided.",
     "image_filename": "pending.jpg",
-    "status": "pending",
-    "created_at": "2026-05-02T23:11:16.186960+00:00",
-    "procedure": null
+    "status": "approved",
+    "created_at": "2026-05-04T18:19:37.214737+00:00",
+    "procedure": "Given his loyalty status, offer an immediate replacement with 15% off, without waiting to receive the wrong items first. Include expedited shipping at no cost so the customer receives the correct books before their class. If the customer prefers a regular return instead, proceed without any pushback."
   }
 ]

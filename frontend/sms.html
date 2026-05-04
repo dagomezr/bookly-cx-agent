@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bookly SMS Thread</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #1c1c1e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    /* Phone frame */
+    .phone {
+      width: 390px;
+      height: 780px;
+      background: #000;
+      border-radius: 48px;
+      box-shadow: 0 0 0 2px #3a3a3c, 0 32px 80px rgba(0,0,0,0.8);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Notch */
+    .notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 34px;
+      background: #000;
+      border-radius: 0 0 20px 20px;
+      z-index: 10;
+    }
+
+    /* Status bar */
+    .status-bar {
+      height: 44px;
+      background: #1c1c1e;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 24px 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .status-bar .time { font-size: 15px; font-weight: 700; }
+    .status-bar .icons { display: flex; gap: 6px; align-items: center; font-size: 11px; }
+
+    /* Header */
+    .thread-header {
+      background: #1c1c1e;
+      padding: 8px 16px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      border-bottom: 1px solid #2c2c2e;
+      flex-shrink: 0;
+    }
+
+    .contact-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #e94560, #1a1a2e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .contact-name {
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .contact-sub {
+      color: #8e8e93;
+      font-size: 11px;
+    }
+
+    /* Messages */
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      background: #000;
+    }
+
+    .messages::-webkit-scrollbar { display: none; }
+
+    .bubble-row {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .bubble-row.agent { align-items: flex-start; }
+    .bubble-row.user  { align-items: flex-end; }
+
+    .bubble {
+      max-width: 72%;
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 15px;
+      line-height: 1.4;
+    }
+
+    .bubble-row.agent .bubble {
+      background: #2c2c2e;
+      color: white;
+      border-bottom-left-radius: 4px;
+    }
+
+    .bubble-row.user .bubble {
+      background: #0a84ff;
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .bubble-time {
+      font-size: 10px;
+      color: #636366;
+      margin-top: 2px;
+      padding: 0 4px;
+    }
+
+    /* Typing indicator */
+    .typing-indicator {
+      display: none;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 14px;
+      background: #2c2c2e;
+      border-radius: 18px;
+      border-bottom-left-radius: 4px;
+      width: fit-content;
+    }
+
+    .typing-indicator.visible { display: flex; }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      background: #8e8e93;
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-6px); }
+    }
+
+    /* Input area */
+    .input-area {
+      background: #1c1c1e;
+      border-top: 1px solid #2c2c2e;
+      padding: 10px 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .input-area input {
+      flex: 1;
+      background: #2c2c2e;
+      border: none;
+      border-radius: 20px;
+      padding: 9px 14px;
+      color: white;
+      font-size: 15px;
+      outline: none;
+    }
+
+    .input-area input::placeholder { color: #636366; }
+
+    .send-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #0a84ff;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+
+    .send-btn:disabled { background: #3a3a3c; cursor: not-allowed; }
+
+    .send-btn svg {
+      width: 16px;
+      height: 16px;
+      fill: white;
+    }
+
+    /* Waiting state */
+    .waiting {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: #000;
+      color: #636366;
+      font-size: 14px;
+      text-align: center;
+      padding: 24px;
+    }
+
+    .waiting .icon { font-size: 40px; }
+  </style>
+</head>
+<body>
+
+  <div class="phone">
+    <div class="notch"></div>
+
+    <div class="status-bar">
+      <span class="time" id="clock">9:41</span>
+      <span class="icons">▲ ● ■</span>
+    </div>
+
+    <div class="thread-header">
+      <div class="contact-avatar">📚</div>
+      <div class="contact-name">Bookly Support</div>
+      <div class="contact-sub">text message</div>
+    </div>
+
+    <div class="messages" id="messages">
+      <div class="waiting" id="waitingState">
+        <div class="icon">💬</div>
+        <div>Waiting for a case to be approved in the operator inbox...</div>
+        <div style="font-size:12px;margin-top:4px;"><a href="/inbox" style="color:#0a84ff;">Open Inbox</a></div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <input type="text" id="userInput" placeholder="iMessage" disabled />
+      <button class="send-btn" id="sendBtn" disabled onclick="sendReply()">
+        <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const messagesEl = document.getElementById("messages");
+    const waitingEl  = document.getElementById("waitingState");
+    const inputEl    = document.getElementById("userInput");
+    const sendBtn    = document.getElementById("sendBtn");
+
+    let sessionLoaded = false;
+
+    // Update clock
+    function updateClock() {
+      const now = new Date();
+      document.getElementById("clock").textContent =
+        now.getHours() + ":" + String(now.getMinutes()).padStart(2, "0");
+    }
+    updateClock();
+    setInterval(updateClock, 10000);
+
+    function formatTime() {
+      const now = new Date();
+      return now.getHours() + ":" + String(now.getMinutes()).padStart(2, "0");
+    }
+
+    function appendBubble(text, role) {
+      const row = document.createElement("div");
+      row.className = `bubble-row ${role}`;
+
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = text;
+
+      const time = document.createElement("div");
+      time.className = "bubble-time";
+      time.textContent = formatTime();
+
+      row.appendChild(bubble);
+      row.appendChild(time);
+      messagesEl.appendChild(row);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function showTyping() {
+      const row = document.createElement("div");
+      row.className = "bubble-row agent";
+      const indicator = document.createElement("div");
+      indicator.className = "typing-indicator visible";
+      indicator.id = "typingIndicator";
+      indicator.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+      row.appendChild(indicator);
+      messagesEl.appendChild(row);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      return row;
+    }
+
+    function enableInput() {
+      inputEl.disabled = false;
+      sendBtn.disabled = false;
+      inputEl.focus();
+    }
+
+    async function loadSession() {
+      const res = await fetch("/api/sms/active");
+      const data = await res.json();
+
+      if (!data.active) return;
+
+      // First load — render full history
+      if (!sessionLoaded) {
+        sessionLoaded = true;
+        waitingEl.remove();
+
+        for (const msg of data.history) {
+          appendBubble(msg.content, msg.role === "assistant" ? "agent" : "user");
+        }
+        enableInput();
+      }
+    }
+
+    inputEl.addEventListener("keydown", e => {
+      if (e.key === "Enter") sendReply();
+    });
+
+    async function sendReply() {
+      const text = inputEl.value.trim();
+      if (!text) return;
+
+      inputEl.value = "";
+      sendBtn.disabled = true;
+      inputEl.disabled = true;
+
+      appendBubble(text, "user");
+      const typingRow = showTyping();
+
+      try {
+        const res = await fetch("/api/sms/reply", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text })
+        });
+        const data = await res.json();
+        typingRow.remove();
+        appendBubble(data.response, "agent");
+      } catch {
+        typingRow.remove();
+        appendBubble("Something went wrong. Please try again.", "agent");
+      }
+
+      sendBtn.disabled = false;
+      inputEl.disabled = false;
+      inputEl.focus();
+    }
+
+    // Poll for session activation
+    loadSession();
+    setInterval(() => { if (!sessionLoaded) loadSession(); }, 3000);
+  </script>
+
+</body>
+</html>

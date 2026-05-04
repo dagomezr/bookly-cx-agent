@@ -8,7 +8,8 @@ from mcp import types
 
 app = Server("bookly-mcp-server")
 
-TASKS_PATH = os.path.join(os.path.dirname(__file__), "..", "tasks.json")
+TASKS_PATH  = os.path.join(os.path.dirname(__file__), "..", "tasks.json")
+MEMORY_PATH = os.path.join(os.path.dirname(__file__), "..", "memory.json")
 
 
 def load_tasks() -> list:
@@ -21,6 +22,18 @@ def load_tasks() -> list:
 def save_tasks(tasks: list):
     with open(TASKS_PATH, "w") as f:
         json.dump(tasks, f, indent=2)
+
+
+def load_memory() -> dict:
+    if not os.path.exists(MEMORY_PATH):
+        return {}
+    with open(MEMORY_PATH, "r") as f:
+        return json.load(f)
+
+
+def save_memory(memory: dict):
+    with open(MEMORY_PATH, "w") as f:
+        json.dump(memory, f, indent=2)
 
 # --- Load Knowledge Base ---
 
@@ -207,6 +220,54 @@ async def list_tools() -> list[types.Tool]:
             }
         ),
         types.Tool(
+            name="get_customer_memory",
+            description=(
+                "Retrieve the conversation summary and preferences from a customer's previous session. "
+                "Call this right after identifying a customer with get_orders_by_contact, if orders are found. "
+                "Use the returned context to personalize the conversation — do not ask for information the customer already provided."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "contact": {
+                        "type": "string",
+                        "description": "The customer's email address or phone number."
+                    }
+                },
+                "required": ["contact"]
+            }
+        ),
+        types.Tool(
+            name="save_session_memory",
+            description=(
+                "Save a summary of this conversation to the customer's memory, keyed by their contact. "
+                "Call this after the customer confirms their preferred follow-up channel. "
+                "This memory will be injected into future sessions so the agent already knows the customer's context."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "contact": {
+                        "type": "string",
+                        "description": "The customer's email address or phone number (the memory key)."
+                    },
+                    "summary": {
+                        "type": "string",
+                        "description": "A concise summary of this conversation: issue, resolution status, urgency, and any relevant context."
+                    },
+                    "preferred_channel": {
+                        "type": "string",
+                        "description": "How the customer wants to be contacted for follow-up: 'sms', 'email', 'call', or 'chat'."
+                    },
+                    "contact_detail": {
+                        "type": "string",
+                        "description": "The specific contact detail for the preferred channel (e.g. phone number for SMS, email address). Optional if already known from their contact."
+                    }
+                },
+                "required": ["contact", "summary", "preferred_channel"]
+            }
+        ),
+        types.Tool(
             name="search_procedures",
             description=(
                 "Search Bookly's internal step-by-step procedure library. "
@@ -252,7 +313,34 @@ async def list_tools() -> list[types.Tool]:
 @app.call_tool()
 async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
 
-    if name == "get_orders_by_contact":
+    if name == "get_customer_memory":
+        contact = arguments.get("contact", "").strip().lower()
+        normalized = ''.join(filter(str.isdigit, contact)) if '@' not in contact else contact
+        memory = load_memory()
+        record = memory.get(contact) or memory.get(normalized)
+        if record:
+            result = {"found": True, **record}
+        else:
+            result = {"found": False}
+        return [types.TextContent(type="text", text=json.dumps(result))]
+
+    elif name == "save_session_memory":
+        contact = arguments.get("contact", "").strip().lower()
+        normalized = ''.join(filter(str.isdigit, contact)) if '@' not in contact else contact
+        key = normalized if normalized else contact
+        memory = load_memory()
+        memory[key] = {
+            "contact": contact,
+            "summary": arguments.get("summary", ""),
+            "preferred_channel": arguments.get("preferred_channel", "chat"),
+            "contact_detail": arguments.get("contact_detail", contact),
+            "last_seen": datetime.now(timezone.utc).isoformat()
+        }
+        save_memory(memory)
+        result = {"saved": True}
+        return [types.TextContent(type="text", text=json.dumps(result))]
+
+    elif name == "get_orders_by_contact":
         contact = arguments.get("contact", "").strip().lower()
         # Normalize phone: strip non-digits for lookup
         normalized = ''.join(filter(str.isdigit, contact)) if not '@' in contact else contact
