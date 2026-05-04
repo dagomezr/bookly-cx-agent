@@ -1,23 +1,29 @@
 {
   "active": {
     "ticket_id": "RT-101",
-    "contact": "BK-1003",
+    "contact": "5551234567",
     "history": [
       {
         "role": "assistant",
-        "content": "\n\nHi there! This is Bookly support following up on your recent order. I saw that you received Spanish-language self-help titles instead of the scientific and algorithm books you ordered \u2014 that's definitely not what should have happened, and I'm sorry about that.\n\nI've got good news though. Given your loyalty with us, we'd like to send out the correct books right away with free expedited shipping, so you have them in time for your class. We'd also like to offer 15% off the replacement as a thank you for your patience \u2014 and you won't need to wait to send back the wrong items first.\n\nWould you like to go ahead with that, or would you prefer a standard return and refund instead? Either way, totally happy to help. \ud83d\ude0a"
+        "content": "\n\nHey there! \ud83d\udc4b This is Bookly support following up on your order BK-1003. I know you received the wrong books \u2014 Spanish-language titles instead of your computer science textbooks. So sorry again about that mix-up.\n\nI've got some good news. A specialist reviewed your case and because you're a valued Gold member, we'd like to offer you an immediate replacement of Introduction to Algorithms & The Art of Computer Programming with free expedited shipping so they arrive before your Monday class. Plus we'll take 15% off for the trouble \u2014 and you don't even need to send back the wrong books first.\n\nIf you'd still prefer a straight refund instead, totally understand and we can do that too. Just let me know what works best for you!"
       }
     ],
     "task": {
       "ticket_id": "RT-101",
       "order_id": "BK-1003",
-      "reason": "Customer received wrong items \u2014 got El Hombre en Busca de Sentido and Lazos de Amor instead of Introduction to Algorithms and The Art of Computer Programming.",
-      "summary": "Customer received completely wrong books (Spanish-language self-help titles instead of the two scientific/algorithm books ordered). Order total is $389.95. No urgency signals detected. Customer is a Gold loyalty tier member since March 2021 with $1,240 annual spend.",
+      "reason": "Customer received wrong items \u2014 got two Spanish-language books (Viktor Frankl and Brian Weiss) instead of the ordered computer science textbooks (Introduction to Algorithms and The Art of Computer Programming).",
+      "summary": "Customer received completely wrong books (Spanish-language titles instead of computer science textbooks) for order BK-1003 ($389.95). They need the books by Monday and are requesting a full refund since they can't wait for a replacement. Customer is a Gold loyalty member since March 2021 with $1,240 annual spend.",
       "image_filename": "pending.jpg",
       "status": "approved",
-      "created_at": "2026-05-04T19:22:57.229185+00:00",
+      "created_at": "2026-05-04T22:58:47.584406+00:00",
       "procedure": "Given his loyalty status, offer an immediate replacement with 15% off, without waiting to receive the wrong items first. Include expedited shipping at no cost so the customer receives the correct books before their class. If the customer prefers a regular return instead, proceed without any pushback."
     },
-    "memory": {}
+    "memory": {
+      "contact": "5551234567",
+      "summary": "Customer received wrong items for order BK-1003 ($389.95) \u2014 got two Spanish-language books instead of computer science textbooks (Introduction to Algorithms & The Art of Computer Programming). Refund requested. Return initiated (RT-101) with human review flagged. Customer needs the books by Monday \u2014 urgency noted. Preferred follow-up: WhatsApp.",
+      "preferred_channel": "whatsapp",
+      "contact_detail": "5551234567",
+      "last_seen": "2026-05-04T22:59:15.554223+00:00"
+    }
   }
 }

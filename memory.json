@@ -1,1 +1,9 @@
-{}
+{
+  "5551234567": {
+    "contact": "5551234567",
+    "summary": "Customer received wrong items for order BK-1003 ($389.95) \u2014 got two Spanish-language books instead of computer science textbooks (Introduction to Algorithms & The Art of Computer Programming). Refund requested. Return initiated (RT-101) with human review flagged. Customer needs the books by Monday \u2014 urgency noted. Preferred follow-up: WhatsApp.",
+    "preferred_channel": "whatsapp",
+    "contact_detail": "5551234567",
+    "last_seen": "2026-05-04T22:59:15.554223+00:00"
+  }
+}

@@ -2,11 +2,11 @@
   {
     "ticket_id": "RT-101",
     "order_id": "BK-1003",
-    "reason": "Customer received wrong items \u2014 got El Hombre en Busca de Sentido and Lazos de Amor instead of Introduction to Algorithms and The Art of Computer Programming.",
-    "summary": "Customer received completely wrong books (Spanish-language self-help titles instead of the two scientific/algorithm books ordered). Order total is $389.95. No urgency signals detected. Customer is a Gold loyalty tier member since March 2021 with $1,240 annual spend.",
+    "reason": "Customer received wrong items \u2014 got two Spanish-language books (Viktor Frankl and Brian Weiss) instead of the ordered computer science textbooks (Introduction to Algorithms and The Art of Computer Programming).",
+    "summary": "Customer received completely wrong books (Spanish-language titles instead of computer science textbooks) for order BK-1003 ($389.95). They need the books by Monday and are requesting a full refund since they can't wait for a replacement. Customer is a Gold loyalty member since March 2021 with $1,240 annual spend.",
     "image_filename": "pending.jpg",
     "status": "approved",
-    "created_at": "2026-05-04T19:22:57.229185+00:00",
+    "created_at": "2026-05-04T22:58:47.584406+00:00",
     "procedure": "Given his loyalty status, offer an immediate replacement with 15% off, without waiting to receive the wrong items first. Include expedited shipping at no cost so the customer receives the correct books before their class. If the customer prefers a regular return instead, proceed without any pushback."
   }
 ]
