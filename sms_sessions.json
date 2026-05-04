@@ -1,1 +1,23 @@
-{}
+{
+  "active": {
+    "ticket_id": "RT-101",
+    "contact": "BK-1003",
+    "history": [
+      {
+        "role": "assistant",
+        "content": "\n\nHi there! This is Bookly support following up on your recent order. I saw that you received Spanish-language self-help titles instead of the scientific and algorithm books you ordered \u2014 that's definitely not what should have happened, and I'm sorry about that.\n\nI've got good news though. Given your loyalty with us, we'd like to send out the correct books right away with free expedited shipping, so you have them in time for your class. We'd also like to offer 15% off the replacement as a thank you for your patience \u2014 and you won't need to wait to send back the wrong items first.\n\nWould you like to go ahead with that, or would you prefer a standard return and refund instead? Either way, totally happy to help. \ud83d\ude0a"
+      }
+    ],
+    "task": {
+      "ticket_id": "RT-101",
+      "order_id": "BK-1003",
+      "reason": "Customer received wrong items \u2014 got El Hombre en Busca de Sentido and Lazos de Amor instead of Introduction to Algorithms and The Art of Computer Programming.",
+      "summary": "Customer received completely wrong books (Spanish-language self-help titles instead of the two scientific/algorithm books ordered). Order total is $389.95. No urgency signals detected. Customer is a Gold loyalty tier member since March 2021 with $1,240 annual spend.",
+      "image_filename": "pending.jpg",
+      "status": "approved",
+      "created_at": "2026-05-04T19:22:57.229185+00:00",
+      "procedure": "Given his loyalty status, offer an immediate replacement with 15% off, without waiting to receive the wrong items first. Include expedited shipping at no cost so the customer receives the correct books before their class. If the customer prefers a regular return instead, proceed without any pushback."
+    },
+    "memory": {}
+  }
+}

@@ -112,7 +112,7 @@ async def decide_task(ticket_id: str, body: dict, background_tasks: BackgroundTa
 
 
 async def start_sms_session(task: dict):
-    """Generate the opening proactive message and create the SMS session."""
+    """Generate the opening proactive message, send it via Twilio, and create the SMS session."""
     # Load customer memory by contact (try email then phone from order mock)
     memory = load_memory()
     contact = task.get("order_id", "")  # fallback
@@ -130,6 +130,39 @@ async def start_sms_session(task: dict):
         task=task,
         memory=customer_memory
     )
+
+    # --- Send via Twilio (WhatsApp or SMS) if credentials are configured ---
+    twilio_sid   = os.getenv("TWILIO_ACCOUNT_SID")
+    twilio_token = os.getenv("TWILIO_AUTH_TOKEN")
+    twilio_to    = os.getenv("TWILIO_TO_NUMBER")
+    whatsapp_from = os.getenv("TWILIO_WHATSAPP_FROM")  # e.g. whatsapp:+14155238886
+    sms_from      = os.getenv("TWILIO_FROM_NUMBER")
+
+    if all([twilio_sid, twilio_token, twilio_to]):
+        try:
+            from twilio.rest import Client as TwilioClient
+            tw = TwilioClient(twilio_sid, twilio_token)
+
+            if whatsapp_from:
+                # Send via WhatsApp (Twilio sandbox or registered sender)
+                tw.messages.create(
+                    body=opening_message,
+                    from_=whatsapp_from,
+                    to=f"whatsapp:{twilio_to}"
+                )
+                print(f"[Twilio] WhatsApp message sent to {twilio_to}")
+            elif sms_from:
+                # Fall back to regular SMS
+                tw.messages.create(
+                    body=opening_message,
+                    from_=sms_from,
+                    to=twilio_to
+                )
+                print(f"[Twilio] SMS sent to {twilio_to}")
+        except Exception as e:
+            print(f"[Twilio] Failed to send message: {e}")
+    else:
+        print("[Twilio] Credentials not set — message skipped (simulated mode only)")
 
     sessions = load_sms_sessions()
     sessions["active"] = {
